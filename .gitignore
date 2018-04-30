@@ -1,6 +1,9 @@
-models/*
+models/*.bin
+models/*.zip
+models/*.bz2
+models/*.vec
+models/*.xml
 __pycache__/*
 stanford-postagger/*
 .ipynb_checkpoints/*
 sr
-

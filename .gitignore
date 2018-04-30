@@ -1,0 +1,6 @@
+models/*
+__pycache__/*
+stanford-postagger/*
+.ipynb_checkpoints/*
+sr
+

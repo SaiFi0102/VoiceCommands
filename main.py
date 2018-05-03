@@ -6,11 +6,13 @@ import numpy as np
 import xmlrpc.client
 import snowboydecoder
 import signal
+import pygame
 from numpy import linalg as LA
 from utils import cosineSim, euclideanDist
 from nltk.tokenize.stanford import StanfordTokenizer
 
 # Configuration
+DING_SOUND_FILE = "resources/ding.wav"
 BASE_SNLP_PATH = os.path.abspath("./stanford-postagger")
 SNLP_TAGGER_JAR = os.path.join(BASE_SNLP_PATH, "stanford-postagger.jar")
 STT_API = 'google'
@@ -26,7 +28,8 @@ COMMANDS = {
 # Connect to sent2vec server
 sent2vec = xmlrpc.client.ServerProxy('http://localhost:8123')
 def sentenceToVector(sentence):
-	return np.asarray(sent2vec.embed_sentence(utils.tokenize(tknzr, sentence)))
+	raw = np.asarray(sent2vec.embed_sentence(utils.tokenize(tknzr, sentence)))
+	return raw/LA.norm(raw)
 
 # Tokenizer
 tknzr = StanfordTokenizer(SNLP_TAGGER_JAR, encoding='utf-8')
@@ -72,10 +75,13 @@ def closestCommandCosine(inputVector):
 
 	return closestCommand, maxSimilarity
 
+def playDing():
+	dingSound.play()
+
 def listenForCommand():
 	# Obtain audio from microphone
 	with sr.Microphone() as source:
-		snowboydecoder.play_audio_file()
+		playDing()
 		print("Listening...")
 		audio = r.listen(source)
 		print("Converting speech to text")
@@ -98,6 +104,11 @@ def listenForCommand():
 		print("Request Error: {}".format(e))
 
 	print()
+
+# Initialize pygame mixer for playing sound files
+pygame.mixer.init()
+dingSound = pygame.mixer.Sound(DING_SOUND_FILE)
+pygame.mixer.music.load(DING_SOUND_FILE)
 
 # Initialize recognizer
 r = sr.Recognizer()

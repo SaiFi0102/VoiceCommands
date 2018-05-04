@@ -17,21 +17,6 @@ DING_SOUND_FILE = "resources/ding.wav"
 BASE_SNLP_PATH = os.path.abspath("./stanford-postagger")
 SNLP_TAGGER_JAR = os.path.join(BASE_SNLP_PATH, "stanford-postagger.jar")
 STT_API = 'google'
-COMMANDS = {
-	'time':		['What is the time', 'Tell me the time'],
-	'date':		['What is the date', 'Tell me the date'],
-	'ls':		['List directory', 'List files and folders'],
-	'rm':		['Delete file'],
-	'rmdir':	['Delete directory', 'Delete folder'],
-	'Kill Berry': ['Kill berry', 'Strangle berry', 'Destroy berry', 'Please kill berry']
-}
-CALLBACKS = {
-	'time':		commands.testCommand,
-	'date':		commands.testCommand,
-	'ls':		commands.testCommand,
-	'rm':		commands.testCommand,
-	'rmdir':	commands.testCommand
-}
 
 # Connect to sent2vec server
 sent2vec = xmlrpc.client.ServerProxy('http://localhost:8123')
@@ -44,7 +29,7 @@ tknzr = StanfordTokenizer(SNLP_TAGGER_JAR, encoding='utf-8')
 
 # Preprocess sentences
 sentenceToCommand = []
-for command, sentences in COMMANDS.items():
+for command, sentences in commands.SENTENCES.items():
 	for sentence in sentences:
 		sentenceToCommand.append((sentence, command))
 
@@ -84,7 +69,7 @@ def closestCommandCosine(inputVector):
 	return closestCommand, maxSimilarity
 
 def playDing():
-	dingSound.play()
+	snowboydecoder.play_audio_file()
 
 def listenForCommand():
 	# Obtain audio from microphone
@@ -108,18 +93,13 @@ def listenForCommand():
 		closestCommand2 = closestCommandEuclidean(textVector)
 		print("Closest command (using cosine similarity): {}".format(closestCommand))
 		print("Closest command (using euclidean distance): {}".format(closestCommand2))
-		CALLBACKS[closestCommand[0]]()
+		commands.CALLBACKS[closestCommand[0]](text)
 	except sr.UnknownValueError:
 		print("Could not understand audio")
 	except sr.RequestError as e:
 		print("Request Error: {}".format(e))
 
 	print()
-
-# Initialize pygame mixer for playing sound files
-pygame.mixer.init()
-dingSound = pygame.mixer.Sound(DING_SOUND_FILE)
-pygame.mixer.music.load(DING_SOUND_FILE)
 
 # Initialize recognizer
 r = sr.Recognizer()

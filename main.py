@@ -7,6 +7,7 @@ import xmlrpc.client
 import snowboydecoder
 import signal
 import pygame
+import commands
 from numpy import linalg as LA
 from utils import cosineSim, euclideanDist
 from nltk.tokenize.stanford import StanfordTokenizer
@@ -23,6 +24,13 @@ COMMANDS = {
 	'rm':		['Delete file'],
 	'rmdir':	['Delete directory', 'Delete folder'],
 	'Kill Berry': ['Kill berry', 'Strangle berry', 'Destroy berry', 'Please kill berry']
+}
+CALLBACKS = {
+	'time':		commands.testCommand,
+	'date':		commands.testCommand,
+	'ls':		commands.testCommand,
+	'rm':		commands.testCommand,
+	'rmdir':	commands.testCommand
 }
 
 # Connect to sent2vec server
@@ -96,8 +104,11 @@ def listenForCommand():
 		# Recognize command
 		print("Speech to text: {}".format(text))
 		textVector = sentenceToVector(text)
-		print("Closest command (using euclidean distance): {}".format(closestCommandEuclidean(textVector)))
-		print("Closest command (using cosine similarity): {}".format(closestCommandCosine(textVector)))
+		closestCommand = closestCommandCosine(textVector)
+		closestCommand2 = closestCommandEuclidean(textVector)
+		print("Closest command (using cosine similarity): {}".format(closestCommand))
+		print("Closest command (using euclidean distance): {}".format(closestCommand2))
+		CALLBACKS[closestCommand[0]]()
 	except sr.UnknownValueError:
 		print("Could not understand audio")
 	except sr.RequestError as e:

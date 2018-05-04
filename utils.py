@@ -2,6 +2,29 @@ import os
 import re
 import numpy as np
 import numpy.linalg as LA
+import snowboydecoder
+from time import sleep
+
+playDing = False
+interrupted = False
+
+def signal_handler(signal, frame):
+	global interrupted
+	interrupted = True
+def interrupt_check():
+	global interrupted
+	return interrupted
+
+def pollForSound():
+	global playDing
+	global interrupted
+	while True:
+		if interrupt_check():
+			return
+		if playDing:
+			snowboydecoder.play_audio_file()
+			playDing = False
+		sleep(0.05)
 
 def tokenize(tknzr, sentence, to_lower=True):
 	"""Arguments:

@@ -6,8 +6,7 @@ SENTENCES = {
 	'date':		['What is the date', 'Tell me the date'],
 	'ls':		['List directory', 'List files and folders'],
 	'rm':		['Delete file'],
-	'rmdir':	['Delete directory', 'Delete folder'],
-	'Kill Berry': ['Kill berry', 'Strangle berry', 'Destroy berry', 'Please kill berry']
+	'rmdir':	['Delete directory', 'Delete folder']
 }
 CALLBACKS = {
 	'time':		testCommand,

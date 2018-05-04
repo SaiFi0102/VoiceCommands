@@ -6,7 +6,7 @@ import numpy as np
 import xmlrpc.client
 import snowboydecoder
 import signal
-import pygame
+import threading
 import commands
 from numpy import linalg as LA
 from utils import cosineSim, euclideanDist
@@ -39,14 +39,6 @@ for sentence, command in sentenceToCommand:
 	senteceVectorToCommand.append((sentenceVector, command))
 
 # Main functions
-interrupted = False
-def signal_handler(signal, frame):
-    global interrupted
-    interrupted = True
-def interrupt_check():
-    global interrupted
-    return interrupted
-
 def closestCommandEuclidean(inputVector):
 	closestDist = float('Inf')
 	closestCommand = None
@@ -68,13 +60,10 @@ def closestCommandCosine(inputVector):
 
 	return closestCommand, maxSimilarity
 
-def playDing():
-	snowboydecoder.play_audio_file()
-
 def listenForCommand():
 	# Obtain audio from microphone
 	with sr.Microphone() as source:
-		playDing()
+		utils.playDing = True
 		print("Listening...")
 		audio = r.listen(source)
 		print("Converting speech to text")
@@ -109,10 +98,13 @@ r.dynamic_energy_threshold = True
 with sr.Microphone() as source:
 	r.adjust_for_ambient_noise(source, duration=1)
 
-detector = snowboydecoder.HotwordDetector("models/snowboy.umdl", sensitivity=0.5)
-signal.signal(signal.SIGINT, signal_handler)
+# Sound player thread
+soundThread = threading.Thread(target=utils.pollForSound)
+soundThread.start()
 
 # Start listening
+signal.signal(signal.SIGINT, utils.signal_handler)
+detector = snowboydecoder.HotwordDetector("models/snowboy.umdl", sensitivity=0.5)
 print("Waiting for hotword")
-detector.start(detected_callback=listenForCommand, interrupt_check=interrupt_check, sleep_time=0.03)
+detector.start(detected_callback=listenForCommand, interrupt_check=utils.interrupt_check, sleep_time=0.03)
 detector.terminate()

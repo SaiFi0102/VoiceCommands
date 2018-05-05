@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import utils
-import speech_recognition as sr
 import numpy as np
 import xmlrpc.client
 import snowboydecoder
@@ -10,22 +9,12 @@ import threading
 import commands
 from numpy import linalg as LA
 from utils import cosineSim, euclideanDist
-from nltk.tokenize.stanford import StanfordTokenizer
-
-# Configuration
-DING_SOUND_FILE = "resources/ding.wav"
-BASE_SNLP_PATH = os.path.abspath("./stanford-postagger")
-SNLP_TAGGER_JAR = os.path.join(BASE_SNLP_PATH, "stanford-postagger.jar")
-STT_API = 'google'
 
 # Connect to sent2vec server
 sent2vec = xmlrpc.client.ServerProxy('http://localhost:8123')
 def sentenceToVector(sentence):
-	raw = np.asarray(sent2vec.embed_sentence(utils.tokenize(tknzr, sentence)))
+	raw = np.asarray(sent2vec.embed_sentence(utils.tokenize(sentence)))
 	return raw/LA.norm(raw)
-
-# Tokenizer
-tknzr = StanfordTokenizer(SNLP_TAGGER_JAR, encoding='utf-8')
 
 # Preprocess sentences
 sentenceToCommand = []
@@ -61,19 +50,8 @@ def closestCommandCosine(inputVector):
 	return closestCommand, maxSimilarity
 
 def listenForCommand():
-	# Obtain audio from microphone
-	with sr.Microphone() as source:
-		utils.playDing = True
-		print("Listening...")
-		audio = r.listen(source)
-		print("Converting speech to text")
-
 	try:
-		# Recognize speech
-		if STT_API == 'google':
-			text = r.recognize_google(audio) #r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")
-		elif STT_API == 'sphinx':
-			text = r.recognize_sphinx(audio)
+		text = utils.listenForSpeech()
 
 		# Recognize command
 		print("Speech to text: {}".format(text))
@@ -83,20 +61,12 @@ def listenForCommand():
 		print("Closest command (using cosine similarity): {}".format(closestCommand))
 		print("Closest command (using euclidean distance): {}".format(closestCommand2))
 		commands.CALLBACKS[closestCommand[0]](text)
-	except sr.UnknownValueError:
-		print("Could not understand audio")
-	except sr.RequestError as e:
-		print("Request Error: {}".format(e))
-
+	except Exception:
+		pass
 	print()
 
-# Initialize recognizer
-r = sr.Recognizer()
-r.dynamic_energy_threshold = True
-
-# Initial energy adjustment
-with sr.Microphone() as source:
-	r.adjust_for_ambient_noise(source, duration=1)
+# Initialize speech recognizer
+utils.initSpeechRecognizer()
 
 # Sound player thread
 soundThread = threading.Thread(target=utils.pollForSound)

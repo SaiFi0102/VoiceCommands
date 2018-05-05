@@ -3,12 +3,29 @@ A python program to run voice commands using speech-to-text, text-to-speech, and
 
 # Prerequisites
 
+## Libraries
+- ffmpeg
+
 ## Python Libraries
-- Numpy
-- NTLK
+- Numpy https://pypi.org/project/numpy/
+- NLTK https://pypi.org/project/nltk/
+- PyAudio https://pypi.org/project/PyAudio/
 - SpeechRecognition https://pypi.org/project/SpeechRecognition/
-- PyAudio https://gist.github.com/diegopacheco/d5d4507988eff995da297344751b095e#file-pyaudio-ubuntu-install-md
+- gTTS https://pypi.org/project/gTTS/
+- pydub https://pypi.org/project/pydub/
 - sent2vec https://github.com/epfml/sent2vec
+
+## Getting libraries
+```shell
+sudo apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0 ffmpeg
+sudo pip3 install numpy pyaudio nltk gTTS pydub SpeechRecognition
+
+git clone https://github.com/epfml/sent2vec
+cd sent2vec
+make
+cd src
+pip3 install .
+```
 
 ## Files
 - Download and extract folder ./stanford-postagger from https://nlp.stanford.edu/software/tagger.shtml

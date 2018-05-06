@@ -1,80 +1,43 @@
-#!/usr/bin/env python3
-import os
-import utils
-import numpy as np
-import xmlrpc.client
-import snowboydecoder
-import signal
-import threading
-import commands
-from numpy import linalg as LA
-from utils import cosineSim, euclideanDist
+from datetime import datetime
+from datetime import date
 
-# Connect to sent2vec server
-sent2vec = xmlrpc.client.ServerProxy('http://localhost:8123')
-def sentenceToVector(sentence):
-	raw = np.asarray(sent2vec.embed_sentence(utils.tokenize(sentence)))
-	return raw/LA.norm(raw)
 
-# Preprocess sentences
-sentenceToCommand = []
-for command, sentences in commands.SENTENCES.items():
-	for sentence in sentences:
-		sentenceToCommand.append((sentence, command))
+def testCommand(text):
+    print("Callback test, text: " + text)
 
-senteceVectorToCommand = []
-for sentence, command in sentenceToCommand:
-	sentenceVector = sentenceToVector(sentence)
-	senteceVectorToCommand.append((sentenceVector, command))
 
-# Main functions
-def closestCommandEuclidean(inputVector):
-	closestDist = float('Inf')
-	closestCommand = None
-	for sentenceVector, command in senteceVectorToCommand:
-		dist = euclideanDist(inputVector, sentenceVector)
-		if dist < closestDist:
-			closestDist = dist
-			closestCommand = command
+def timeCommand(text):
+    output = datetime.now().strftime("It's %I:%M %p")
+    utils.playTextToSpeech(output)
 
-	return closestCommand, closestDist
-def closestCommandCosine(inputVector):
-	maxSimilarity = 0.0
-	closestCommand = None
-	for sentenceVector, command in senteceVectorToCommand:
-		sim = cosineSim(inputVector, sentenceVector)
-		if sim > maxSimilarity:
-			maxSimilarity = sim
-			closestCommand = command
 
-	return closestCommand, maxSimilarity
+def dateCommand(text):
+    output = datetime.now().strftime(
+        "Today is %A, %d %B, %Y")  # google strftime to know which to use for day, dateok anything else
+    utils.playTextToSpeech(output)
 
-def listenForCommand():
-	try:
-		text = utils.listenForSpeech()
 
-		# Recognize command
-		print("Speech to text: {}".format(text))
-		textVector = sentenceToVector(text)
-		closestCommand = closestCommandCosine(textVector)
-		closestCommand2 = closestCommandEuclidean(textVector)
-		print("Closest command (using cosine similarity): {}".format(closestCommand))
-		print("Closest command (using euclidean distance): {}".format(closestCommand2))
-		commands.CALLBACKS[closestCommand[0]](text)
-	except Exception:
-		pass
-	print()
+def listCommand(text):
 
-# Initialize speech recognizer
-utils.initSpeechRecognizer()
 
-# Sound player thread
-soundThread = threading.Thread(target=utils.pollForSound)
-soundThread.start()
+def deleteCommand(text):
+    subprocess.call("delte.sh", shell=True)
 
-# Start listening
-signal.signal(signal.SIGINT, utils.signal_handler)
-detector = snowboydecoder.HotwordDetector("models/snowboy.umdl", sensitivity=0.5)
-print("Waiting for hotword")
-detector.start(detected_callback=listenForCommand, interrupt_check=utils.interrupt_check, sleep_time=0.03)
-detector.terminate()
+
+SENTENCES = {
+    'time': ['What is the time', 'Tell me the time'],
+    'date': ['What is the date', 'Tell me the date', "date", "day"],
+    'ls': ['List directory', 'List files and folders'],
+    'rm': ['Delete file'],
+    'rmdir': ['Delete directory', 'Delete folder']
+}
+CALLBACKS = {
+    'time': timeCommand,
+    'date': dateCommand,
+    'ls': testCommand,
+    'rm': testCommand,
+    'rmdir': testCommand
+}
+
+if __name__ == '__main__':
+    dateCommand("")
